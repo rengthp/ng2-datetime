@@ -17,6 +17,13 @@ export class AppComponent {
         assumeNearbyYear: true,
         format: 'D, d MM yyyy'
     };
+    timepickerOptions: any = {
+        showSeconds: true,
+        explicitMode: true,
+        showMeridian: false,
+        defaultTime: 'current',
+        template: false
+    };
     date5: Date = new Date();
     date6: Date = new Date();
     dateFrom: Date;

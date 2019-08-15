@@ -29,6 +29,7 @@
     "bootstrap": ">=3.0.0",
     "bootstrap-datepicker": "1.7.0-RC1",
     "bootstrap-timepicker": "^0.5.2",
+    "inputmask": "^4.0.8",
     "jquery": ">=2.2.1"
   },
   "devDependencies": {

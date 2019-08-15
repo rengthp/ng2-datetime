@@ -13,7 +13,7 @@
         <div class="panel-body">
             <pre><code>&lt;datetime [(ngModel)]="date">&lt;/datetime></code></pre>
             <form [formGroup]="form" (submit)="submit()">
-                <datetime formControlName="date"></datetime>
+                <datetime formControlName="date" [timepicker]="timepickerOptions"></datetime>
             </form>
             <h5><strong>ngModel:</strong> {{getDate(form.get('date').value) | date: "medium"}}</h5>
         </div>
@@ -28,7 +28,7 @@
                 </div>
                 <div class="panel-body">
                     <pre><code>&lt;datetime [datepicker]="false" [(ngModel)]="date3">&lt;/datetime></code></pre>
-                    <datetime [datepicker]="false" [(ngModel)]="date3"></datetime>
+                    <datetime [datepicker]="false" [(ngModel)]="date3" [timepicker]="timepickerOptions"></datetime>
                     <h5><strong>ngModel:</strong> {{getDate(date3) | date: "medium"}}</h5>
                 </div>
             </section>

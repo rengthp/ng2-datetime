@@ -2,8 +2,9 @@ import {
     Component, Input, HostListener, AfterViewInit, OnDestroy,
     SimpleChanges, OnChanges, HostBinding, forwardRef
 } from '@angular/core';
-import {ControlValueAccessor, NG_VALUE_ACCESSOR} from '@angular/forms';
-import {ITimepickerEvent} from './ITimepickerEvent';
+import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { ITimepickerEvent } from './ITimepickerEvent';
+var Inputmask = require('inputmask');
 
 const CUSTOM_ACCESSOR = {
     provide: NG_VALUE_ACCESSOR,
@@ -31,16 +32,15 @@ const CUSTOM_ACCESSOR = {
                     <span [ngClass]="datepickerOptions.icon || 'glyphicon glyphicon-th'"></span>
                 </div>
             </div>
-            <div [ngClass]="{ 'input-group': !timepickerOptions.hideIcon, 'bootstrap-timepicker timepicker': true }">
+            <div [ngClass]="{ 'input-group': !timepickerOptions.hideIcon }">
                 <input id="{{idTimePicker}}" type="text" class="form-control input-small"
                        [attr.readonly]="readonly"
                        [attr.required]="required"
-                       [attr.placeholder]="timepickerOptions.placeholder || 'Set time'"
+                       [attr.placeholder]="timepickerOptions.placeholder"
                        [attr.tabindex]="tabindex"
                        [(ngModel)]="timeModel"
-                       (focus)="showTimepicker()"
-                       (blur)="onTouched()"
-                       (keyup)="checkEmptyValue($event)">
+                       (keyup)="checkEmptyValue($event)"
+                       (blur)="getMilliseconds()">
                 <span [hidden]="timepickerOptions.hideIcon || false" class="input-group-addon">
                     <i [ngClass]="timepickerOptions.icon || 'glyphicon glyphicon-time'"></i>
                 </span>
@@ -71,6 +71,9 @@ export class NKDatetime implements ControlValueAccessor, AfterViewInit, OnDestro
 
     idDatePicker: string = uniqueId('q-datepicker_');
     idTimePicker: string = uniqueId('q-timepicker_');
+
+    milliseconds = 0;
+    selectedTime: string;
 
     onChange = (_: any) => {
     }
@@ -122,6 +125,18 @@ export class NKDatetime implements ControlValueAccessor, AfterViewInit, OnDestro
         }
     }
 
+    getMilliseconds() {
+        this.selectedTime = (<any>$('#' + this.idTimePicker)).val();
+        let timeParts = (<any>$('#' + this.idTimePicker)).val().split(':');
+        if (!isNaN(timeParts[3])) {
+            console.log(timeParts[3]);
+            this.milliseconds = Number(timeParts[3]);
+        } else {
+            this.milliseconds = 0;
+        }
+
+    }
+
     writeValue(value: any) {
         this.date = value;
         if (isDate(this.date)) {
@@ -144,10 +159,10 @@ export class NKDatetime implements ControlValueAccessor, AfterViewInit, OnDestro
     checkEmptyValue(e: any) {
         const value = e.target.value;
         if (value === '' && (
-                this.timepickerOptions === false ||
-                this.datepickerOptions === false ||
-                (this.timeModel === '' && this.dateModel === '')
-            )) {
+            this.timepickerOptions === false ||
+            this.datepickerOptions === false ||
+            (this.timeModel === '' && this.dateModel === '')
+        )) {
             this.onChange(undefined);
         }
     }
@@ -171,8 +186,10 @@ export class NKDatetime implements ControlValueAccessor, AfterViewInit, OnDestro
     //////////////////////////////////
 
     private init(): void {
+        let im = new Inputmask('99 : 99 : 99 : 999');
+        im.mask((<any>$('#' + this.idTimePicker)));
         if (!this.datepicker && this.datepickerOptions !== false) {
-            let options = jQuery.extend({enableOnReadonly: !this.readonly}, this.datepickerOptions);
+            let options = jQuery.extend({ enableOnReadonly: !this.readonly }, this.datepickerOptions);
             this.datepicker = (<any>$('#' + this.idDatePicker)).datepicker(options);
             this.datepicker
                 .on('changeDate', (e: any) => {
@@ -183,6 +200,7 @@ export class NKDatetime implements ControlValueAccessor, AfterViewInit, OnDestro
                         newDate.setHours(this.date.getHours());
                         newDate.setMinutes(this.date.getMinutes());
                         newDate.setSeconds(this.date.getSeconds());
+                        newDate.setMilliseconds(this.date.getMilliseconds());
                     }
 
                     this.date = newDate;
@@ -193,11 +211,11 @@ export class NKDatetime implements ControlValueAccessor, AfterViewInit, OnDestro
         }
 
         if (!this.timepicker && this.timepickerOptions !== false) {
-            let options = jQuery.extend({defaultTime: false}, this.timepickerOptions);
+            let options = jQuery.extend({ defaultTime: false }, this.timepickerOptions);
             this.timepicker = (<any>$('#' + this.idTimePicker)).timepicker(options);
             this.timepicker
                 .on('changeTime.timepicker', (e: ITimepickerEvent) => {
-                    let {meridian, hours} = e.time;
+                    let { meridian, hours } = e.time;
 
                     if (meridian) {
                         // has meridian -> convert 12 to 24h
@@ -218,6 +236,9 @@ export class NKDatetime implements ControlValueAccessor, AfterViewInit, OnDestro
                     this.date.setHours(hours);
                     this.date.setMinutes(e.time.minutes);
                     this.date.setSeconds(e.time.seconds);
+                    this.date.setMilliseconds(this.milliseconds);
+
+                    (<any>$('#' + this.idTimePicker)).val(this.selectedTime);
                     this.onChange(this.date);
                 });
         } else if (this.timepickerOptions === false) {
@@ -241,7 +262,8 @@ export class NKDatetime implements ControlValueAccessor, AfterViewInit, OnDestro
             const time =
                 this.pad(hours) + ':' +
                 this.pad(this.date.getMinutes()) + ':' +
-                this.pad(this.date.getSeconds()) +
+                this.pad(this.date.getSeconds()) + ':' +
+                this.pad(this.date.getMilliseconds()) +
                 (this.timepickerOptions.showMeridian || this.timepickerOptions.showMeridian === undefined
                     ? meridian : '');
             this.timepicker.timepicker('setTime', time);
